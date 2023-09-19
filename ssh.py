@@ -44,7 +44,7 @@ def start_user():
     
     print("\n Starting Hidden SSH Session...")
     print("	- Logging in as " + serverUser + " at " + serverName + " (" + serverIP + ")")
-    os.system("ssh " + serverUser + "@" + serverIP)
+    os.system("sshpass " + "-f " + "pass.txt " + serverUser + "@" + serverIP)
     
     
     
