@@ -25,9 +25,14 @@ menu = None
 
 # --------------------------------- Constants -------------------------------- #
 APPINDICATOR_ID = "server_util"
-iconpath =  os.path.join(os.path.dirname(os.path.abspath(__file__)), "icon3.png")
+iconname = "icon3.png"
+iconpath =  os.path.join(os.path.dirname(os.path.abspath(__file__)), iconname)
 
-serverName = "HomeServer"
+filePath = "conf.txt"
+
+file = open(filePath).readlines()
+serverName = file[0].split()[1]
+    
 
 vpnActive = False
    
@@ -67,44 +72,100 @@ def main():
 class Application(tk.Frame): 
     # init da shit             
     def __init__(self, master=None):
-        tk.Frame.__init__(self, master)   
-        self.grid()                       
+        tk.Frame.__init__(self, master=master)
+        self.grid(padx=10, pady=10)             
         self.createWidgets()
+
         
     # update things like text etc based on vpn status
     def update_internal(self):
         
         global vpnActive
         
-        vpnActive = get_vpn_status()
-        # ["interface", "handshake", "transfer", "recieved"]
+        chunks = get_cmd_output("sudo wg show", ["interface", "key", "handshake", "transfer", "received"])
+        vpnActive = (len(chunks) >= 4 and chunks[0] == serverName)
             
         # if has connection to VPN
         if vpnActive:
-            self.sshButton.config(text="Deactivate VPN")
-        
+            try:
+                self.vpnButton.config(text="Deactivate VPN")
+                self.sshButton.config(text="Connect SSH")
+                # change text
+                self.text_status.config(text="Connected: True")
+                self.text_name.config(text="Name: " + chunks[0])
+                self.text_pubkey.config(text="Public Key: " + chunks[1])
+                self.text_handshake.config(text="Handshake: " + chunks[2] + " seconds ago")
+                self.text_total_downup.config(text="Total Down/Up-load: " + chunks[3] + "B / " + chunks[4] + "B")
+                self.text_average_downup.config(text="Average Down/Up-load: TBD")
+            except:
+                pass
+            
         # if no current connection to VPN
         else:
-            self.sshButton.config(text="Activate VPN")
+            self.vpnButton.config(text="Activate VPN")
+            self.sshButton.config(text="no")
+            #change text
+            self.text_status.config(text="Connected: False")
+            self.text_name.config(text="")
+            self.text_pubkey.config(text="")
+            self.text_handshake.config(text="")
+            self.text_total_downup.config(text="")
+            self.text_average_downup.config(text="")
+            
+            
 
 	# Create Elements inside App Window
     def createWidgets(self):
         
-        # Quit Button
-        self.quitButton = tk.Button(self, text='Quit', command=self.sudoku)            
-        self.quitButton.grid() 
         
-        # Activate/deactivate ssh
-        self.sshButton = tk.Button(self, text='Activate SSH', command=self.activateSSH)
-        self.sshButton.grid()
+        # Activate/deactivate VPN
+        self.vpnButton = tk.Button(self, text='Activate VPN', command=self.activateVPN)
+        self.vpnButton.grid(row=0, column=0)
+        
+        # start new ssh terminal
+        self.sshButton = tk.Button(self, text='SSH', command=self.activateSSH)
+        self.sshButton.grid(row=1, column=0)
+        
+        # Quit Button
+        self.quitButton = tk.Button(self, text='Quit', command=self.quit)            
+        self.quitButton.grid(row=4, column=0) 
+        
+        # Quit Button
+        self.sudokuButton = tk.Button(self, text='Close & SIGKILL', command=self.sudoku)            
+        self.sudokuButton.grid(row=5, column=0) 
+        
+        # text
+        self.text_status = tk.Label(self, text="")
+        self.text_status.grid(sticky="W", row=0, column=1, padx=10, pady=10)
+        self.text_name = tk.Label(self, text="")
+        self.text_name.grid(sticky="W", row=1, column=1, padx=10, pady=10)
+        self.text_pubkey = tk.Label(self, text="")
+        self.text_pubkey.grid(sticky="W", row=2, column=1, padx=10, pady=10)
+        self.text_handshake = tk.Label(self, text="Handshake: ")
+        self.text_handshake.grid(sticky="W", row=3, column=1, padx=10, pady=10)
+        self.text_total_downup = tk.Label(self, text="")
+        self.text_total_downup.grid(sticky="W", row=4, column=1, padx=10, pady=10)
+        self.text_average_downup = tk.Label(self, text="")
+        self.text_average_downup.grid(sticky="W", row=5, column=1, padx=10, pady=10)
+        
+        #space
+        self.extra_space = tk.Label(self, text=" ")
+        self.extra_space.grid(row=0, column=2, padx=100, pady=10)
     
     
+    # close vpn and SIGKILL self
     def sudoku(self):    
-        print("\n Et tu Brutus...")    
+
+        print("\n Et tu Brutus...")            
+        if vpnActive:
+            print("\n Closing the Portal...")
+            self.activateVPN()
+            
         os.killpg(os.getpgid(os.getpid()), signal.SIGKILL)
+        
     
     # Activate/Deactivate VPN based on current wg show status
-    def activateSSH(self):
+    def activateVPN(self):
         if vpnActive:
             print("\n Deactivating VPN...")
             string = get_cmd_output("sudo wg-quick down " + serverName, [])
@@ -112,6 +173,14 @@ class Application(tk.Frame):
         else:
             print("\n Activating VPN...")
             string = get_cmd_output("sudo wg-quick up " + serverName, [])
+            
+            
+    
+    # Start neww ssh terminal to server
+    def activateSSH(self):
+        if vpnActive: 
+            os.system("gnome-terminal -- python3 ssh.py")
+    
 			
             
     
@@ -125,9 +194,14 @@ class Application(tk.Frame):
         
 # --------------- Init App Window From Class, Called By Top Bar -------------- #
 def init_app(str):
-    print("\n Creating app window...")
+    
     global app
-    app = Application()
+    
+    print("\n Creating app window...")
+    
+    root = Tk()
+    root.wm_title("Server Util")
+    app = Application(root)
     
     
  
@@ -168,6 +242,7 @@ def get_cmd_output(string, arr):
                 continue
             
             result.append(chunks[i+1])
+            break
             
     return result
             
