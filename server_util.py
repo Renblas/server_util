@@ -5,8 +5,6 @@ import os
 import signal
 import subprocess
 
-import math
-
 from time import sleep
 
 import gi.repository
@@ -20,6 +18,7 @@ from tkinter import ttk as tk
 
 
 # ------------------------------- Create Tk Gui ------------------------------ #
+root = None
 app = None
 menu = None
 
@@ -35,14 +34,13 @@ serverName = file[0].split()[1]
     
 
 vpnActive = False
-   
 
 # ============================================================================ #
 #                                 Main Function                                #
 # ============================================================================ #
 def main():
     
-    global app, Gtk, vpnActive
+    global app, Gtk, vpnActive, appQuit
     
     # Setup
     os.setpgrp()
@@ -56,10 +54,14 @@ def main():
     while True:
         
         if (app):
-            app.update_idletasks()
-            app.update()
-            
-            app.update_internal()
+            try:
+                app.update_idletasks()
+                app.update()
+                
+                app.update_internal()
+                
+            except:
+                pass
             
         Gtk.main_iteration_do(False)
         
@@ -127,7 +129,7 @@ class Application(tk.Frame):
         self.sshButton.grid(row=1, column=0)
         
         # Quit Button
-        self.quitButton = tk.Button(self, text='Quit', command=self.quit)            
+        self.quitButton = tk.Button(self, text='Quit', command=self.quit_app)            
         self.quitButton.grid(row=4, column=0) 
         
         # Quit Button
@@ -151,8 +153,16 @@ class Application(tk.Frame):
         #space
         self.extra_space = tk.Label(self, text=" ")
         self.extra_space.grid(row=0, column=2, padx=100, pady=10)
+
+
     
-    
+    # quit app while leaving top bar running. actually done in main loop but this sets the variable for it to do so
+    def quit_app(self):
+        global root
+        root.destroy()
+        
+        
+          
     # close vpn and SIGKILL self
     def sudoku(self):    
 
@@ -195,7 +205,10 @@ class Application(tk.Frame):
 # --------------- Init App Window From Class, Called By Top Bar -------------- #
 def init_app(str):
     
-    global app
+    global app, root
+    
+    if app != None:
+        return
     
     print("\n Creating app window...")
     
@@ -203,7 +216,7 @@ def init_app(str):
     root.wm_title("Server Util")
     app = Application(root)
     
-    
+  
  
 # ------------------------------ GUI Definitions ----------------------------- #
 def init_top_bar():
@@ -257,9 +270,3 @@ def get_vpn_status():
         return True
     else:
         return False
-    
-    
-    
-    
-# -------------------------- Call Main + Other Stuff ------------------------- #
-main()
