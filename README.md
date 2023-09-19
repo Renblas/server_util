@@ -20,15 +20,15 @@ The following packages / python libs may need to be installed:
 
 ## To Use:
 1. Create a file called "conf.txt" that looks like the sample below
-   '''
+   ```
 		name: <insert name of wireguard configuration>
 		ip: <private ip of server (for ssh)>
 		user: <user name to connect to server with>
-   '''
+   ```
 
 2. Create a file called pass.text
-	'''
+	```
 		<password goes here>
-	'''
+	```
 		
 Both files are used by the sshpass to start the ssh connection
