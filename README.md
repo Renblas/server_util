@@ -29,7 +29,7 @@ The following packages may need to be installed:
 
 ## For ssh
 
-All the script for ssh is open a new terminal in Terminator and start the ssh connection. You just need to enter the password in the terminal if prompted.
+All the script does for ssh is open a new terminal in Terminator and start the ssh connection. You just need to enter the password in the terminal if prompted.
 
 ## Script info if you care
 
