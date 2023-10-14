@@ -25,23 +25,11 @@ The following packages may need to be installed:
 
 ## To Use:
 
-
 1. You also need a wireguard config file stored wherever its supposed to be so that it can be used by the wg command
-   
-### Everything below is only required for ssh
 
-2. Create a file called "conf.txt" that looks like the sample below
-   ```
-		name: <insert name of wireguard configuration>
-		ip: <private ip of server (for ssh)>
-		user: <user name to connect to server with>
-   ```
+## For ssh
 
-3. Setup ssh keys for you and the server if you havent done so already
-
-		
-Both files are used by the sshpass to start the ssh connection
-
+All the script for ssh is open a new terminal in Terminator and start the ssh connection. You just need to enter the password in the terminal if prompted.
 
 ## Script info if you care
 

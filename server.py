@@ -189,7 +189,7 @@ class Application(tk.Frame):
     # Start neww ssh terminal to server
     def activateSSH(self):
         if vpnActive: 
-            os.system("gnome-terminal -- python3 ssh.py")
+            os.system("terminator --new-tab -e 'python3 ssh.py'")
     
 			
             
@@ -270,3 +270,5 @@ def get_vpn_status():
         return True
     else:
         return False
+        
+main()
